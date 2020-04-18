@@ -19,8 +19,8 @@
         template(v-slot:item.info="{ item }")
           v-icon(@click.stop="showInfoDialog(item)")
             | mdi-information-outline
-        template(v-slot:item.actions="{ item }")
-          button.watch(@click="playVideo(item)") みる
+        template(v-slot:item.タイトル="{ item }")
+          button.watch(@click="playVideo(item)") {{ item["タイトル"] }}
 
       v-dialog(v-model="infoDialog" max-width="600px")
         v-card(v-if="itemForInfoDialog")
@@ -60,13 +60,10 @@ export default {
       sourceUrl: "https://code4fukui.github.io/timetable/data/funs.json",
       schoolYear: "小学1年",
       schoolYears: [ {text:"いちねんせい", value: "小学1年"}, "小学2年", "小学3年", "小学4年", "小学5年", "小学6年", "中学1年", "中学2年", "中学3年", "高校1年", "高校2年", "高校3年", "大人"],
-      sortBy: 'totalPatients',
-      sortDesc: true,
       tableHeaders: [
         { text: "詳細", value: "info" },
-        { text: "科目", value: "科目" },
-        { text: "タイトル", value: "タイトル" },
-        { text: "Actions", value: "actions", sortable: false }
+        { text: "科目", value: "科目", width: 90 },
+        { text: "タイトル", value: "タイトル" }
       ],
       tmData: [],// tm = Teaching material
       tableData: [],
@@ -75,7 +72,7 @@ export default {
     }
   },
   mounted () {
-    document.querySelector("meta[name='viewport']").setAttribute("content", "width=800")
+    document.querySelector("meta[name='viewport']").setAttribute("content", "width=600")
     this.loadState()
 
     axios
