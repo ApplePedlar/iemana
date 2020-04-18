@@ -69,7 +69,7 @@ export default {
       window.open(item.URL)
     },
     makeTableData () {
-      this.tableData = this.tmData.filter(d => d["対象"] === this.schoolYear)
+      this.tableData = this.tmData.filter(d => d["対象"] === this.schoolYear && (!d['言語'] || d['言語'].indexOf('日本語') >= 0))
     }
   },
   watch: {
