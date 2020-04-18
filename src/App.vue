@@ -16,8 +16,24 @@
         :items-per-page="100",
         :hide-default-footer="true",
         :mobile-breakpoint="0")
+        template(v-slot:item.info="{ item }")
+          v-icon(@click.stop="showInfoDialog(item)")
+            | mdi-information-outline
         template(v-slot:item.actions="{ item }")
           button.watch(@click="playVideo(item)") みる
+
+      v-dialog(v-model="infoDialog" max-width="600px")
+        v-card(v-if="itemForInfoDialog")
+          v-card-title
+            span {{ itemForInfoDialog["タイトル"] }}
+          template(v-for="key in Object.keys(itemForInfoDialog)")
+            v-card-text(v-if="itemForInfoDialog[key]")
+              | {{ key }}: 
+              template(v-if="key.indexOf('URL') >= 0")
+                a(:href="itemForInfoDialog[key]" target="_blank") {{ itemForInfoDialog[key] }}
+              template(v-else)
+                | {{ itemForInfoDialog[key] }}
+
 
     .credit
       | Credit
@@ -47,12 +63,15 @@ export default {
       sortBy: 'totalPatients',
       sortDesc: true,
       tableHeaders: [
-        { text: "教材シリーズ名", value: "教材シリーズ名" },
+        { text: "詳細", value: "info" },
+        { text: "科目", value: "科目" },
         { text: "タイトル", value: "タイトル" },
         { text: "Actions", value: "actions", sortable: false }
       ],
       tmData: [],// tm = Teaching material
-      tableData: []
+      tableData: [],
+      infoDialog: false,
+      itemForInfoDialog: null
     }
   },
   mounted () {
@@ -80,6 +99,29 @@ export default {
     },
     makeTableData () {
       this.tableData = this.tmData.filter(d => d["対象"] === this.schoolYear && (!d['言語'] || d['言語'].indexOf('日本語') >= 0))
+      if (this.schoolYear === "小学1年") {
+        this.conversionToKana()
+      }
+    },
+    conversionToKana () {
+      const kanjiKanaMap = {
+        "国語": "こくご",
+        "算数": "さんすう",
+        "生活": "せいかつ",
+        "図工": "ずこう",
+        "音楽": "おんがく",
+      }
+
+      this.tableData.map(d => {
+        let kana = kanjiKanaMap[d['科目']]
+        if (kana) {
+          d['科目'] = kana
+        }
+      })
+    },
+    showInfoDialog (item) {
+      this.itemForInfoDialog = item
+      this.infoDialog = true
     }
   },
   watch: {
