@@ -57,6 +57,8 @@ export default {
   },
   mounted () {
     document.querySelector("meta[name='viewport']").setAttribute("content", "width=800")
+    this.loadState()
+
     axios
       .get(this.sourceUrl)
       .then(response => {
@@ -65,6 +67,14 @@ export default {
       })
   },
   methods: {
+    loadState () {
+      let schoolYear = window.localStorage.getItem("schoolYear")
+      this.schoolYears.forEach(sy => {
+        if (schoolYear === sy || schoolYear === sy.value) {
+          this.schoolYear = schoolYear
+        }
+      })
+    },
     playVideo (item) {
       window.open(item.URL)
     },
@@ -74,6 +84,7 @@ export default {
   },
   watch: {
     schoolYear () {
+      window.localStorage.setItem("schoolYear", this.schoolYear)
       this.makeTableData()
     }
   }
