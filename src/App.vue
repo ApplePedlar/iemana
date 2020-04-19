@@ -21,6 +21,8 @@
             | mdi-information-outline
         template(v-slot:item.タイトル="{ item }")
           button.watch(@click="playVideo(item)") {{ item["タイトル"] }}
+        template(v-slot:item.understanding="{ item }")
+          button.understanding(@click="showUnderstandingDialog(item)") {{ getStars(item) }}
 
       v-dialog(v-model="infoDialog" max-width="600px")
         v-card(v-if="itemForInfoDialog")
@@ -33,7 +35,15 @@
                 a(:href="itemForInfoDialog[key]" target="_blank") {{ itemForInfoDialog[key] }}
               template(v-else)
                 | {{ itemForInfoDialog[key] }}
-
+      v-dialog(v-model="understandingDialog" max-width="400px")
+        v-card(v-if="itemForUnderstandingDialog")
+          v-card-title
+            span {{ itemForUnderstandingDialog["タイトル"] }}
+          v-card-text どうでしたか？
+          v-card-text(v-for="(d, index) in understandingIconText")
+            v-btn.ml-10(min-width=260 @click="setUnderstanding(5 - index)")
+              span.understanding {{d.icon}}
+              | {{d.text}}
 
     .credit
       | Credit
@@ -63,27 +73,39 @@ export default {
       tableHeaders: [
         { text: "詳細", value: "info" },
         { text: "科目", value: "科目", width: 90 },
-        { text: "タイトル", value: "タイトル" }
+        { text: "タイトル", value: "タイトル" },
+        { text: "理解度", value: "understanding", width: 70 }
       ],
       tmData: [],// tm = Teaching material
       tableData: [],
       infoDialog: false,
-      itemForInfoDialog: null
+      itemForInfoDialog: null,
+      understandingDialog: false,
+      itemForUnderstandingDialog: null,
+      understandingIconText: [
+        { "icon": "💯", "text": "よくわかった" },
+        { "icon": "😄", "text": "だいたいわかった" },
+        { "icon": "😑", "text": "はんぶんくらいわかった" },
+        { "icon": "😥", "text": "あまりわからなかった" },
+        { "icon": "😨", "text": "ぜんぜんわからん" },
+        { "icon": "🙈", "text": "まだみてない" }
+      ]
     }
   },
   mounted () {
-    document.querySelector("meta[name='viewport']").setAttribute("content", "width=600")
-    this.loadState()
+    document.querySelector("meta[name='viewport']").setAttribute("content", "width=500")
+    this.loadSchoolYear()
 
     axios
       .get(this.sourceUrl)
       .then(response => {
         this.tmData = response.data
+        this.loadUnderstanding()
         this.makeTableData()
       })
   },
   methods: {
-    loadState () {
+    loadSchoolYear () {
       let schoolYear = window.localStorage.getItem("schoolYear")
       this.schoolYears.forEach(sy => {
         if (schoolYear === sy || schoolYear === sy.value) {
@@ -93,9 +115,13 @@ export default {
     },
     playVideo (item) {
       window.open(item.URL)
+      this.showUnderstandingDialog(item)
     },
     makeTableData () {
-      this.tableData = this.tmData.filter(d => d["対象"] === this.schoolYear && (!d['言語'] || d['言語'].indexOf('日本語') >= 0))
+      this.tableData = this.tmData.filter(
+        d => d["対象"] === this.schoolYear
+        && (!d['言語'] || d['言語'].indexOf('日本語') >= 0)
+        && d["教材種別"] === "動画")
       if (this.schoolYear === "小学1年") {
         this.conversionToKana()
       }
@@ -119,6 +145,25 @@ export default {
     showInfoDialog (item) {
       this.itemForInfoDialog = item
       this.infoDialog = true
+    },
+    getStars (item) {
+      let understanding = item.understanding || 0
+      return this.understandingIconText[5 - (item.understanding || 0)].icon
+    },
+    showUnderstandingDialog (item) {
+      this.itemForUnderstandingDialog = item
+      this.understandingDialog = true
+    },
+    setUnderstanding (understanding) {
+      this.itemForUnderstandingDialog.understanding = understanding
+      this.understandingDialog = false
+      window.localStorage.setItem("understanding-" + this.itemForUnderstandingDialog.URL, understanding)
+      this.makeTableData()
+    },
+    loadUnderstanding () {
+      this.tmData.forEach(d => {
+        d.understanding = window.localStorage.getItem("understanding-" + d.URL)
+      })
     }
   },
   watch: {
@@ -153,5 +198,7 @@ export default {
     font-size: 12px
     .project-home, .data-source, .link
       margin-left: 20px
+  .understanding
+    font-size: 20px
 
 </style>
