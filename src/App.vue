@@ -121,7 +121,8 @@ export default {
       this.tableData = this.tmData.filter(
         d => d["対象"] === this.schoolYear
         && (!d['言語'] || d['言語'].indexOf('日本語') >= 0)
-        && d["教材種別"] === "動画")
+        && d["教材種別"] === "動画"
+        && !d["URL"].endsWith(".pdf"))
       if (this.schoolYear === "小学1年") {
         this.conversionToKana()
       }
