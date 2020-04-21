@@ -118,10 +118,10 @@ export default {
       this.showUnderstandingDialog(item)
     },
     makeTableData () {
-      this.tableData = this.tmData.filter(
-        d => d["対象"].indexOf(this.schoolYear) >= 0
+      this.tableData = this.tmData.filter(d =>
+        this.isTargetContent(d["対象"])
         && (!d['言語'] || d['言語'].indexOf('日本語') >= 0)
-        && d["教材種別"] === "動画"
+        && (d["教材種別"] === "動画" || d["URL"].indexOf("youtu") >= 0)
         && !d["URL"].endsWith(".pdf"))
       if (this.schoolYear === "小学1年") {
         this.conversionToKana()
@@ -133,11 +133,13 @@ export default {
         "算数": "さんすう",
         "生活": "せいかつ",
         "図工": "ずこう",
+        "図画工作": "ずこう",
+        "社会": "しゃかい",
         "音楽": "おんがく",
       }
 
       this.tableData.map(d => {
-        let kana = kanjiKanaMap[d['科目']]
+        let kana = kanjiKanaMap[d['科目'].trim()]
         if (kana) {
           d['科目'] = kana
         }
@@ -165,6 +167,18 @@ export default {
       this.tmData.forEach(d => {
         d.understanding = window.localStorage.getItem("understanding-" + d.URL)
       })
+    },
+    isTargetContent (target) {
+      if (target.indexOf(this.schoolYear) >= 0) {
+        return true
+      }
+
+      if (
+        this.schoolYear.startsWith("小学") && (target === "小学生" || target === "小中学生")
+        || this.schoolYear.startsWith("中学") && (target === "中学生" || target === "中高生")
+        || this.schoolYear.startsWith("高校") && (target === "高校生" || target === "中高生")) {
+        return true
+      }
     }
   },
   watch: {
