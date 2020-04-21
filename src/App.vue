@@ -4,17 +4,30 @@
     .about 無料学習動画リンク集
 
     v-app
-      v-select(
-        v-model="schoolYear"
-        :items="schoolYears"
-        :label="schoolYear === '小学1年' ? 'がくねん' : '学年'"
-        outlined)
-      
+      v-container
+        v-select.mx-5(
+          v-model="schoolYear"
+          :items="schoolYears"
+          :label="schoolYear === '小学1年' ? 'がくねん' : '学年'"
+          outlined)
+        .d-flex.align-end.flex-column.mr-2
+          button(@click.stop="filterDialog = true")
+            v-icon(size="medium")
+              | mdi-filter
+            span.filter-label 教材シリーズフィルタ設定
+          v-dialog(v-model="filterDialog" max-width="400px")
+            v-card(v-if="filterDialog")
+              v-toolbar.mb-10(dark color="primary")
+                v-btn(icon dark @click="filterDialog = false")
+                  v-icon mdi-close
+                v-toolbar-title 教材シリーズフィルタ設定
+              v-checkbox.mx-5(v-for="series in Object.keys(seriesFilter)" :key="series" :label="series" v-model="seriesFilter[series]")
+
       v-data-table.table(
         :headers="tableHeaders",
-        :items="tableData",
-        :items-per-page="100",
         :hide-default-footer="true",
+        :items="tableData",
+        :items-per-page="-1",
         :mobile-breakpoint="0")
         template(v-slot:item.info="{ item }")
           v-icon(@click.stop="showInfoDialog(item)")
@@ -40,7 +53,7 @@
           v-card-title
             span {{ itemForUnderstandingDialog["タイトル"] }}
           v-card-text どうでしたか？
-          v-card-text(v-for="(d, index) in understandingIconText")
+          v-card-text(v-for="(d, index) in understandingIconText" :key="index")
             v-btn.ml-10(min-width=260 @click="setUnderstanding(5 - index)")
               span.understanding {{d.icon}}
               | {{d.text}}
@@ -89,7 +102,9 @@ export default {
         { "icon": "😥", "text": "あまりわからなかった" },
         { "icon": "😨", "text": "ぜんぜんわからん" },
         { "icon": "🙈", "text": "まだみてない" }
-      ]
+      ],
+      seriesFilter: {},
+      filterDialog: false
     }
   },
   mounted () {
@@ -101,6 +116,7 @@ export default {
       .then(response => {
         this.tmData = response.data
         this.loadUnderstanding()
+        this.loadFilteringSetting()
         this.makeTableData()
       })
   },
@@ -119,7 +135,7 @@ export default {
     },
     makeTableData () {
       this.tableData = this.tmData.filter(d =>
-        this.isTargetContent(d["対象"])
+        this.isTargetContent(d)
         && (!d['言語'] || d['言語'].indexOf('日本語') >= 0)
         && (d["教材種別"] === "動画" || d["URL"].indexOf("youtu") >= 0)
         && !d["URL"].endsWith(".pdf"))
@@ -136,6 +152,7 @@ export default {
         "図画工作": "ずこう",
         "社会": "しゃかい",
         "音楽": "おんがく",
+        "体育": "たいいく"
       }
 
       this.tableData.map(d => {
@@ -168,7 +185,35 @@ export default {
         d.understanding = window.localStorage.getItem("understanding-" + d.URL)
       })
     },
-    isTargetContent (target) {
+    loadFilteringSetting () {
+      const seriesSet = new Set()
+
+      this.tmData.forEach(d => {
+        seriesSet.add(d["教材シリーズ名"])
+      })
+
+      seriesSet.forEach(series => {
+        // プログラミング関連はオプトイン
+        if (series.indexOf("プログラミング") >= 0 || series.indexOf("PCN") >= 0) {
+          this.seriesFilter[series] = false
+        } else {
+          this.seriesFilter[series] = true
+        }
+        let filterSetting = window.localStorage.getItem("series-filter-" + series)
+        if (filterSetting != null) {
+          this.seriesFilter[series] = filterSetting === "true"
+        }
+      })
+    },
+    isTargetContent (content) {
+      let target = content["対象"]
+      let genre = content["科目"]
+
+      // filter
+      if (!this.seriesFilter[content["教材シリーズ名"]]) {
+        return false
+      }
+
       if (target.indexOf(this.schoolYear) >= 0) {
         return true
       }
@@ -185,6 +230,14 @@ export default {
     schoolYear () {
       window.localStorage.setItem("schoolYear", this.schoolYear)
       this.makeTableData()
+    },
+    filterDialog () {
+      if (!this.filterDialog) {
+        Object.keys(this.seriesFilter).forEach(key => {
+          window.localStorage.setItem("series-filter-" + key, this.seriesFilter[key])
+        })
+        this.makeTableData()
+      }
     }
   }
 }
@@ -204,8 +257,8 @@ export default {
   .about
     margin: 20px
   .table
-    max-width: 800px
-    margin: 30px auto
+    width: 800px
+    margin: 10px auto 30px
     border: 1px silver solid
     .watch
       color: blue
@@ -215,5 +268,6 @@ export default {
       margin-left: 20px
   .understanding
     font-size: 20px
-
+  .filter-label
+    font-size: 14px
 </style>
