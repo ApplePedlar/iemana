@@ -1,7 +1,7 @@
 <template lang="pug">
   .top
     h1 いえでまなぼう！
-    .about 無料学習動画リンク集
+    .about オープンデータを利用した無料動画教材リンク集です。休校中の学習などにお役立てください。
 
     v-app
       v-container
