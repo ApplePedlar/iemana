@@ -92,7 +92,7 @@ export default {
     return {
       sourceUrl: "https://code4fukui.github.io/timetable/data/funs.json",
       schoolYear: "小学1年",
-      schoolYears: [ {text:"いちねんせい", value: "小学1年"}, "小学2年", "小学3年", "小学4年", "小学5年", "小学6年", "中学1年", "中学2年", "中学3年", "高校1年", "高校2年", "高校3年", "大人"],
+      schoolYears: [ {text:"いちねんせい", value: "小学1年"}, "小学2年", "小学3年", "小学4年", "小学5年", "小学6年", "中学1年", "中学2年", "中学3年", "高校1年", "高校2年", "高校3年", "特別支援", "大人"],
       tableHeaders: [
         { text: "詳細", value: "info", width: 10 },
         { text: "サムネイル", value: "thumbnail", width: 10 },
@@ -163,7 +163,8 @@ export default {
         "図画工作": "ずこう",
         "社会": "しゃかい",
         "音楽": "おんがく",
-        "体育": "たいいく"
+        "体育": "たいいく",
+        "英語": "えいご"
       }
 
       this.tableData.map(d => {
