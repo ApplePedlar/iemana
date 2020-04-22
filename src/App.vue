@@ -33,7 +33,10 @@
           v-icon(@click.stop="showInfoDialog(item)")
             | mdi-information-outline
         template(v-slot:item.thumbnail="{ item }")
-          img.thumbnail(v-if="getThumbnailUrl(item)" :src="getThumbnailUrl(item)" @click="playVideo(item)" onerror="this.src = 'nothumbnail.png';")
+          .thumbnail-wrapper(v-if="getThumbnailUrl(item)")
+            img.thumbnail(v-if="getThumbnailUrl(item)" :src="getThumbnailUrl(item)" @click="playVideo(item)" onerror="this.src = 'nothumbnail.png';")
+            .duration(v-if="item['長さ']")
+              .duration-inner {{ shrinkDuration(item['長さ']) }}
           v-icon(v-else @click="playVideo(item)")
             | mdi-information-outline
         template(v-slot:item.タイトル="{ item }")
@@ -256,6 +259,9 @@ export default {
           return result[1]
         }
       }
+    },
+    shrinkDuration (duration) {
+      return duration.replace(/^(00:0|0:0|00:|0:|0)/, "")
     }
   },
   watch: {
@@ -295,16 +301,35 @@ export default {
     th, td
       &.subject
         width: 90px
+      &.understanding
+        width: 70px
       @media(max-width:600px)
         padding: 0 3px
         &.subject
           width: 62px
         &.understanding
           width: 45px
-    .thumbnail
-      display: block
-      margin: 5px auto
-      width: 80px
+    .thumbnail-wrapper
+      position: relative
+      .thumbnail
+        display: block
+        margin: 5px 0
+        width: 100px
+        z-index: 1
+      .duration
+        position: absolute
+        margin-top: -21px
+        width: 100%
+        z-index: 0
+        .duration-inner
+          display: inline-block
+          float: right
+          margin-left: auto
+          padding: 0 1px
+          line-height: 16px
+          color: white
+          background-color: rgba(0, 0, 0, 0.4)
+
     .watch
       color: blue
   img.info
