@@ -116,8 +116,6 @@ export default {
     }
   },
   mounted () {
-    console.log(process.env)
-    console.log("process.env.VUE_APP_YOUTUBE_API_KEY = " + process.env.VUE_APP_YOUTUBE_API_KEY)
     document.querySelector("meta[name='viewport']").setAttribute("content", "width=500")
     this.loadSchoolYear()
 
