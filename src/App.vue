@@ -32,15 +32,22 @@
         template(v-slot:item.info="{ item }")
           v-icon(@click.stop="showInfoDialog(item)")
             | mdi-information-outline
+        template(v-slot:item.thumbnail="{ item }")
+          img.thumbnail(v-if="getThumbnailUrl(item)" :src="getThumbnailUrl(item)" @click="playVideo(item)" onerror="this.src = 'nothumbnail.png';")
+          v-icon(v-else @click="playVideo(item)")
+            | mdi-information-outline
         template(v-slot:item.タイトル="{ item }")
-          button.watch(@click="playVideo(item)") {{ item["タイトル"] }}
+          a.watch(@click="playVideo(item)") {{ item["タイトル"] }}
         template(v-slot:item.understanding="{ item }")
-          button.understanding(@click="showUnderstandingDialog(item)") {{ getStars(item) }}
+          button.understanding-icon(@click="showUnderstandingDialog(item)") {{ getStars(item) }}
 
       v-dialog(v-model="infoDialog" max-width="600px")
         v-card(v-if="itemForInfoDialog")
-          v-card-title
-            span {{ itemForInfoDialog["タイトル"] }}
+          v-toolbar.mb-5(dark color="primary")
+            v-btn(icon dark @click="infoDialog = false")
+              v-icon mdi-close
+            v-toolbar-title {{ itemForInfoDialog["タイトル"] }}
+          img.info(v-if="getThumbnailUrl(itemForInfoDialog)" :src="getThumbnailUrl(itemForInfoDialog)" onerror="this.src = 'nothumbnail.png';")
           template(v-for="key in Object.keys(itemForInfoDialog)")
             v-card-text(v-if="itemForInfoDialog[key]")
               | {{ key }}: 
@@ -55,7 +62,7 @@
           v-card-text どうでしたか？
           v-card-text(v-for="(d, index) in understandingIconText" :key="index")
             v-btn.ml-10(min-width=260 @click="setUnderstanding(5 - index)")
-              span.understanding {{d.icon}}
+              span.understanding-icon {{d.icon}}
               | {{d.text}}
 
     .credit
@@ -84,10 +91,11 @@ export default {
       schoolYear: "小学1年",
       schoolYears: [ {text:"いちねんせい", value: "小学1年"}, "小学2年", "小学3年", "小学4年", "小学5年", "小学6年", "中学1年", "中学2年", "中学3年", "高校1年", "高校2年", "高校3年", "大人"],
       tableHeaders: [
-        { text: "詳細", value: "info" },
-        { text: "科目", value: "科目", width: 90 },
+        { text: "詳細", value: "info", width: 10 },
+        { text: "サムネイル", value: "thumbnail", width: 10 },
+        { text: "科目", value: "科目", class: "subject" },
         { text: "タイトル", value: "タイトル" },
-        { text: "理解度", value: "understanding", width: 70 }
+        { text: "理解度", value: "understanding", class: "understanding" }
       ],
       tmData: [],// tm = Teaching material
       tableData: [],
@@ -224,6 +232,30 @@ export default {
         || this.schoolYear.startsWith("高校") && (target === "高校生" || target === "中高生")) {
         return true
       }
+    },
+    getThumbnailUrl (content) {
+      let youtubeId = this.getYoutubeId(content.URL)
+      if (youtubeId) {
+        return `https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`
+      }
+      return "./nothumbnail.png"
+    },
+    getYoutubeId (url) {
+      // 以下のパターンに対応。
+      // https://youtu.be/ididididid
+      // https://www.youtube.com/embed/ididididid
+      // https://www.youtube.com/watch?v=ididididid
+      // https://www.youtube.com/watch?v=ididididid&feature=youtu.be
+      let regexpArr = [
+        /https:\/\/youtu\.be\/([0-9a-zA-Z_\-]+)/,
+        /https:\/\/www\.youtube\.com\/(?:embed\/|watch\?v=)([0-9a-zA-Z_\-]+)/
+      ]
+      for (let i = 0; i < regexpArr.length; i++) {
+        let result = regexpArr[i].exec(url)
+        if (result) {
+          return result[1]
+        }
+      }
     }
   },
   watch: {
@@ -260,13 +292,29 @@ export default {
     width: 800px
     margin: 10px auto 30px
     border: 1px silver solid
+    th, td
+      &.subject
+        width: 90px
+      @media(max-width:600px)
+        padding: 0 3px
+        &.subject
+          width: 62px
+        &.understanding
+          width: 45px
+    .thumbnail
+      display: block
+      margin: 5px auto
+      width: 80px
     .watch
       color: blue
+  img.info
+    display: block
+    margin: 0 auto
   .credit, .links
     font-size: 12px
     .project-home, .data-source, .link
       margin-left: 20px
-  .understanding
+  .understanding-icon
     font-size: 20px
   .filter-label
     font-size: 14px
