@@ -1,4 +1,12 @@
-# iemana
+# いえでまなぼう！
+
+オープンデータを利用した無料動画教材リンク集です。休校中の学習などにお役立てください。
+
+https://applepedlar.github.io/iemana/
+
+## カスタマイズ版
+
+- [ふくいわくわく授業バージョン](https://applepedlar.github.io/iemana/#fukui-wakuwaku)
 
 ## Project setup
 ```

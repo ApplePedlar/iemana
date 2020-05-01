@@ -1,6 +1,7 @@
 <template lang="pug">
   .top
     h1 いえでまなぼう！
+    h2(v-if="customize") {{ customize.subtitle }}
     .about オープンデータを利用した無料動画教材リンク集です。休校中の学習などにお役立てください。
 
     v-app
@@ -10,7 +11,7 @@
           :items="schoolYears"
           :label="schoolYear === '小学1年' ? 'がくねん' : '学年'"
           outlined)
-        .d-flex.align-end.flex-column.mr-2
+        .d-flex.align-end.flex-column.mr-2(v-if="!customize")
           button(@click.stop="filterDialog = true")
             v-icon(size="medium")
               | mdi-filter
@@ -86,6 +87,7 @@
 <script>
 
 import axios from "axios"
+import customizeData from "./customize-data.json"
 
 export default {
   data () {
@@ -115,12 +117,14 @@ export default {
         { "icon": "🙈", "text": "まだみてない" }
       ],
       seriesFilter: {},
-      filterDialog: false
+      filterDialog: false,
+      customize: null
     }
   },
   mounted () {
     document.querySelector("meta[name='viewport']").setAttribute("content", "width=500")
     this.loadSchoolYear()
+    this.initCustomize()
 
     axios
       .get(this.sourceUrl)
@@ -139,6 +143,12 @@ export default {
           this.schoolYear = schoolYear
         }
       })
+    },
+    initCustomize () {
+      let hash = window.location.hash
+      if (hash) {
+        this.customize = customizeData.find(d => d.id === hash.substring(1))
+      }
     },
     playVideo (item) {
       window.open(item.URL)
@@ -214,9 +224,14 @@ export default {
         } else {
           this.seriesFilter[series] = true
         }
-        let filterSetting = window.localStorage.getItem("series-filter-" + series)
-        if (filterSetting != null) {
-          this.seriesFilter[series] = filterSetting === "true"
+
+        if (this.customize) {
+          this.seriesFilter[series] = this.customize.series_list.find(d => d === series)
+        } else {
+          let filterSetting = window.localStorage.getItem("series-filter-" + series)
+          if (filterSetting != null) {
+            this.seriesFilter[series] = filterSetting === "true"
+          }
         }
       })
     },
@@ -296,6 +311,12 @@ export default {
     height: 80px
     text-align: center
     padding-top: 20px
+  h2
+    font-size: 20px
+    background-color: green
+    color: white
+    height: 50px
+    text-align: center
   .about
     margin: 20px
   .table
